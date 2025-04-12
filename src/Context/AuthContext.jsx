@@ -1,0 +1,94 @@
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+    const navigate = useNavigate();
+
+    const [user, setUser] = useState({ usuario: '', senha: '' });
+
+    const [dataSession, setDataSession] = useState({
+        acesso: "",
+        bloqueioUsuario: "",
+        emailUsuario: "",
+        fotoUsuario: "",
+        hiera: "",
+        loginUsuario: "",
+        matriculaUsuario: "",
+        nomeUsuario: ""
+    });
+
+    const [logged, setIsLogged] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+            setIsLogged(true);
+            navigate('/Home');
+        } else {
+            setUser({});
+            setIsLogged(false);
+            navigate('/');
+        }
+    }, []);
+
+    const login = async (username, password) => {
+        try {
+            const response = await fetch('/recanto/Brsacolas/queryx/valida.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuario: username, senha: password }),
+            });
+
+            const data = await response.json();
+
+
+            if (data.response === 'success') {
+                const newUser = { usuario: username, senha: password };
+
+                const dataSession = {
+                    "acesso": data.session.acesso,
+                    "bloqueioUsuario": data.session.bloqueioUsuario,
+                    "emailUsuario": data.session.emailUsuario,
+                    "fotoUsuario": data.session.fotoUsuario,
+                    "hiera": data.session.hiera,
+                    "loginUsuario": data.session.loginUsuario,
+                    "matriculaUsuario": data.session.matriculaUsuario,
+                    "nomeUsuario": data.session.nomeUsuario,
+                }
+
+                setDataSession(dataSession)
+
+                console.log(dataSession);
+
+                setUser(newUser);
+                setIsLogged(true);
+                localStorage.setItem('user', JSON.stringify(newUser));
+                navigate('/Home');
+                setError(null);
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const logout = () => {
+        localStorage.removeItem('user');
+        setUser({});
+        setIsLogged(false);
+        navigate('/');
+    };
+
+    return (
+        <AuthContext.Provider value={{ user, login, logout, error, logged, dataSession }}>
+            {children}
+        </AuthContext.Provider>
+    );
+};
+
+export const useAuth = () => useContext(AuthContext);
