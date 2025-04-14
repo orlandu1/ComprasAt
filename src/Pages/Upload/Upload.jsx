@@ -1,36 +1,15 @@
 import React, { useState } from 'react';
-import Tesseract from 'tesseract.js';
 
 
 const Upload = () => {
 
-    const [text, setText] = useState('');
-    const [isProcessing, setIsProcessing] = useState(false);
-
-    const handleImageUpload = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            setIsProcessing(true);
-
-            Tesseract.recognize(
-                file,
-                'por',
-                {
-                    logger: (m) => console.log(m),
-                }
-            ).then(({ data: { text } }) => {
-                setText(text);
-                setIsProcessing(false);
-            });
-        }
-    };
 
     return (
         <div>
-            <div className='flex w-318 h-148 mt-1 ml-3  shadow-xl/30 rounded-sm justify-center'>
+        <div className="flex w-318 h-148 mt-1 ml-3 bg-gray-600 shadow-xl/30 rounded-sm justify-center">
 
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-                <div className="py-20 bg-white px-2">
+                <div className="py-20 px-2">
 
                     <div className="max-w-md mx-auto rounded-lg overflow-hidden md:max-w-xl">
                         <div className="md:flex">
@@ -43,16 +22,12 @@ const Upload = () => {
                                             <span className="block text-gray-400 font-normal">Solte seu arquivo aqui</span>
                                         </div>
                                     </div>
-                                    <input type="file" className="h-full w-full opacity-0" name=""  onChange={handleImageUpload} />
+                                    <input type="file" className="h-full w-full opacity-0" name="" />
                                 </div>
                             </div>
                         </div>
                         <br />
-                        {isProcessing ? (
-                            <p>Processando...</p>
-                        ) : (
-                            <pre>{text}</pre>
-                        )}
+                       
                     </div>
                 </div>
             </div>

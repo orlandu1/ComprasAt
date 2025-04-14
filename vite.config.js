@@ -9,12 +9,12 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      '/recanto': {
-        target: 'https://srvsave320.br-atacadao.corp/recanto/',
+      '/db': {
+        target: 'http://localhost/db/',
         changeOrigin: true,
         secure: false,
         ws: true,
-        rewrite: (path) => path.replace(/^\/recanto/, ''),
+        rewrite: (path) => path.replace(/^\/db/, ''),
       },
     },
   },

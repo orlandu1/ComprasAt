@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (username, password) => {
         try {
-            const response = await fetch('/recanto/Brsacolas/queryx/valida.php', {
+            const response = await fetch('/db/valida.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ usuario: username, senha: password }),
