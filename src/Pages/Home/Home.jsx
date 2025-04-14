@@ -12,6 +12,7 @@ const Home = () => {
     const [annotations, setAnnotations] = useState(() => {
         try {
             const saved = localStorage.getItem('pdfAnnotations');
+            // INICIA O ARRAY COM OS DADOS DO BANCO
             return saved ? JSON.parse(saved) : [];
         } catch (error) {
             console.error('Erro ao carregar anotações:', error);
@@ -31,6 +32,7 @@ const Home = () => {
         const loadAnnotations = () => {
             try {
                 const savedAnnotations = localStorage.getItem('pdfAnnotations');
+                // BUSCA OS DADOS APÓS UM REFRESH / CONSISTENCIA
                 if (savedAnnotations) {
                     const parsed = JSON.parse(savedAnnotations);
                     setAnnotations(parsed);
@@ -48,6 +50,7 @@ const Home = () => {
     useEffect(() => {
         try {
             localStorage.setItem('pdfAnnotations', JSON.stringify(annotations));
+            // GRAVAÇÃO DE ITENS NO ARRAY EM TEMPO REAL
         } catch (error) {
             console.error('Erro ao salvar anotações:', error);
         }
@@ -217,7 +220,7 @@ const Home = () => {
                             onKeyDown={handleCommentSubmit}
                             onBlur={() => setCommentInput({ ...commentInput, visible: false })}
                             autoFocus
-                            placeholder="Digite e pressione Enter"
+                            placeholder="Comente e aperte Enter"
                         />
                     </div>
                 )}
