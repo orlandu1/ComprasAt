@@ -8,11 +8,15 @@ import { pdfjs } from 'react-pdf';
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 const Home = () => {
+
+    const PDF_ID = 'encarte-01';
+    const usuarioLogado = JSON.parse(localStorage.getItem('user'))?.loginUsuario;
+    
     const [numPages, setNumPages] = useState(null);
     const [annotations, setAnnotations] = useState(() => {
         try {
             const saved = localStorage.getItem('pdfAnnotations');
-            // INICIA O ARRAY COM OS DADOS DO BANCO
+
             return saved ? JSON.parse(saved) : [];
         } catch (error) {
             console.error('Erro ao carregar anotações:', error);
@@ -28,24 +32,44 @@ const Home = () => {
         value: ''
     });
 
+    // get_annotations.php
+    // handle_annotation.php
+
     useEffect(() => {
-        const loadAnnotations = () => {
+        const fetchAnnotations = async () => {
             try {
-                const savedAnnotations = localStorage.getItem('pdfAnnotations');
-                // BUSCA OS DADOS APÓS UM REFRESH / CONSISTENCIA
-                if (savedAnnotations) {
-                    const parsed = JSON.parse(savedAnnotations);
-                    setAnnotations(parsed);
-                }
+                const response = await fetch(`/db/get_annotations.php?pdf_id=${PDF_ID}`);
+                const data = await response.json();
+                if (data.success) setAnnotations(data.annotations);
             } catch (error) {
-                console.error('Erro ao carregar anotações:', error);
+                console.error('Erro ao buscar anotações:', error);
             }
         };
 
+        if (!isLoading) fetchAnnotations();
+
+
         if (!isLoading) {
-            loadAnnotations();
+            fetchAnnotations();
         }
     }, [isLoading]);
+
+    const syncAnnotation = async (action, annotation) => {
+        try {
+            const formData = new FormData();
+            formData.append('pdf_id', PDF_ID);
+            formData.append('action', action);
+            formData.append('data', JSON.stringify(annotation));
+
+            await fetch(`/db/handle_annotation.php`, {
+                method: 'POST',
+                body: formData,
+            });
+        } catch (error) {
+            console.error('Erro ao sincronizar:', error);
+        }
+    };
+
 
     useEffect(() => {
         try {
@@ -83,6 +107,7 @@ const Home = () => {
         if (event.button === 1) {
             if (existingAnnotation) {
                 setAnnotations(annotations.filter((annotation) => annotation.id !== existingAnnotation.id));
+                syncAnnotation('delete', existingAnnotation);
             } else {
 
                 setCommentInput({
@@ -102,6 +127,8 @@ const Home = () => {
                 (event.button === 1 && existingAnnotation.type === 'COMENTAR')
             ) {
                 setAnnotations(annotations.filter((annotation) => annotation.id !== existingAnnotation.id));
+                syncAnnotation('delete', existingAnnotation);
+
             }
         } else {
             let newAnnotation;
@@ -110,18 +137,23 @@ const Home = () => {
                     id: Date.now(),
                     type: 'CERTO',
                     position: { x: relativeX, y: relativeY },
+                    user_name: usuarioLogado
                 };
             } else if (event.button === 2) {
                 newAnnotation = {
                     id: Date.now(),
                     type: 'ERRADO',
                     position: { x: relativeX, y: relativeY },
+                    user_name: usuarioLogado
                 };
             }
 
             if (newAnnotation) {
                 setAnnotations([...annotations, newAnnotation]);
+                syncAnnotation('add', newAnnotation); // Sincroniza com o banco ao adicionar
             }
+
+
         }
     };
 
@@ -135,8 +167,10 @@ const Home = () => {
                     y: commentInput.y + 40
                 },
                 comment: commentInput.value,
+                user_name: usuarioLogado
             };
             setAnnotations([...annotations, newAnnotation]);
+            syncAnnotation('add', newAnnotation);
             setCommentInput({ ...commentInput, visible: false, value: '' });
         }
     };

@@ -16,7 +16,9 @@ export const AuthProvider = ({ children }) => {
         hiera: "",
         loginUsuario: "",
         matriculaUsuario: "",
-        nomeUsuario: ""
+        nomeUsuario: "",
+        ultimoAcesso: "",
+        dataCadastro: "",
     });
 
     const [logged, setIsLogged] = useState(false);
@@ -26,6 +28,7 @@ export const AuthProvider = ({ children }) => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             setUser(JSON.parse(storedUser));
+            setDataSession(storedUser);
             setIsLogged(true);
             navigate('/Home');
         } else {
@@ -58,15 +61,16 @@ export const AuthProvider = ({ children }) => {
                     "loginUsuario": data.session.loginUsuario,
                     "matriculaUsuario": data.session.matriculaUsuario,
                     "nomeUsuario": data.session.nomeUsuario,
+                    "ultimoAcesso": data.session.ultimoAcesso,
+                    "dataCadastro": data.session.dataCadastro,
                 }
 
                 setDataSession(dataSession)
 
-                console.log(dataSession);
 
                 setUser(newUser);
                 setIsLogged(true);
-                localStorage.setItem('user', JSON.stringify(newUser));
+                localStorage.setItem('user', JSON.stringify(dataSession));
                 navigate('/Home');
                 setError(null);
             } else {

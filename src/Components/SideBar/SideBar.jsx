@@ -1,18 +1,20 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../Context/AuthContext';
 import { AiOutlineHome, AiOutlineCloudUpload, AiOutlineUser, AiTwotoneContainer } from "react-icons/ai";
+import { FaUserAltSlash } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 
 const SideBar = () => {
-    const { logged } = useAuth();
+    const { logged, logout } = useAuth();
     const [hover, setIsHover] = useState(false);
     const navigate = useNavigate();
 
     const menuItems = [
         { icon: <AiOutlineHome size={22} />, label: 'Início', route: '/home' },
-        { icon: <AiTwotoneContainer size={22} />, label: 'Relatório', route: '/relatorio' },
+        { icon: <AiTwotoneContainer size={22} />, label: 'Relatório', route: '/report' },
         { icon: <AiOutlineCloudUpload size={22} />, label: 'Upload', route: '/upload' },
-        { icon: <AiOutlineUser size={22} />, label: 'Usuário', route: '/usuario' },
+        { icon: <AiOutlineUser size={22} />, label: 'Usuário', route: '/userPage' },
+
     ];
 
     if (!logged) return null;
@@ -36,6 +38,18 @@ const SideBar = () => {
                         {hover && <span className='text-sm font-medium text-gray-800 transition-opacity'>{item.label}</span>}
                     </div>
                 ))}
+            </div>
+
+            <div className='flex flex-col space-y-4 mt-4'>
+                <div
+                    onClick={() => logout()}
+                    className='flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors group'
+                >
+                    <div className='text-gray-600 group-hover:text-blue-600'>
+                        <FaUserAltSlash size={22} className='text-red-600' />
+                    </div>
+                    {hover && <span className='text-sm font-medium text-gray-800 transition-opacity'>Sair</span>}
+                </div>
             </div>
         </div>
     );

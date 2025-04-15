@@ -1,10 +1,9 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../Context/AuthContext';
 
 const Login = () => {
 
-    const { login, error } = useAuth();
+    const { login, error, logged } = useAuth();
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -18,19 +17,11 @@ const Login = () => {
         login(username, password);
         setError('');
 
-        try {
-
-            if (username && password) {
-                login(username, password);
-            } else {
-                setError(error);
-            }
-        } catch (err) {
-            setError('Ocorreu um erro durante o login');
-        } finally {
-            setIsLoading(false);
-        }
     };
+
+    setInterval(() => {
+        setIsLoading(false);
+    }, 3000);
 
     return (
         <div>
@@ -89,18 +80,6 @@ const Login = () => {
                         </div>
 
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <input
-                                    id="remember-me"
-                                    name="remember-me"
-                                    type="checkbox"
-                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                />
-                                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                                    Lembrar de mim
-                                </label>
-                            </div>
-
                             <div className="text-sm">
                                 <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
                                     Esqueceu sua senha?
