@@ -42,6 +42,8 @@ const UserPage = () => {
     }, []);
 
 
+    console.log('caminho da imagem ' + imgSrc);
+
     useEffect(() => {
         if (!userData || !userData.hierarquia) return;
         const permissao = userData.hierarquia == 9;
@@ -172,6 +174,7 @@ const UserPage = () => {
             });
 
             const result = await response.json();
+            console.log('Resposta do PHP:', result);
 
             setImgSrc(`/uploads/fotos/${JSON.parse(localStorage.getItem('user')).loginUsuario}.png?t=${Date.now()}`);
 
