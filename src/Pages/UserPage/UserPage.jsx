@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import ModalRegister from '../../Helpers/ModalRegister';
+import Alert from '../../Helpers/Alert'
+import ModalSelfReset from '../../Helpers/ModalSelfReset';
 
 const UserPage = () => {
 
@@ -8,7 +10,7 @@ const UserPage = () => {
         bloqueioUsuario: "",
         emailUsuario: "",
         fotoUsuario: "",
-        hiera: "",
+        hierarquia: "",
         loginUsuario: "",
         matriculaUsuario: "",
         nomeUsuario: "",
@@ -18,7 +20,9 @@ const UserPage = () => {
     const [usersData, setUsersData] = useState([]);
     const [isAdmin, setIsAdmin] = useState();
     const [modalOpen, setIsModalOpen] = useState(false);
-    const { acesso, bloqueioUsuario, emailUsuario, fotoUsuario, hiera, loginUsuario, matriculaUsuario, nomeUsuario } = userData;
+    const { acesso, bloqueioUsuario, emailUsuario, fotoUsuario, hierarquia, loginUsuario, matriculaUsuario, nomeUsuario } = userData;
+    const [notification, setNotification] = useState();
+    const [isModalPasswordOpen, setIsModalPasswordOpen] = useState(false);
 
     useEffect(() => {
         const usuarioLogado = JSON.parse(localStorage.getItem('user'));
@@ -28,32 +32,39 @@ const UserPage = () => {
     }, []);
 
     useEffect(() => {
-        if (!userData || !userData.hiera) return;
-        const permissao = userData.hiera == 9;
+        if (!userData || !userData.hierarquia) return;
+        const permissao = userData.hierarquia == 9;
         setIsAdmin(permissao);
 
     }, [userData]);
 
+    const fetchUsers = async () => {
+        try {
+            const response = await fetch(`/db/users.php`);
+            const data = await response.json();
+
+            if (data.response === "success") {
+                setUsersData(data.data);
+                console.log('Usuários:', data.data);
+            } else {
+                console.warn('Resposta inesperada:', data);
+            }
+        } catch (error) {
+            console.error('Erro ao buscar usuários:', error);
+        }
+    };
 
     useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const response = await fetch(`/db/users.php`);
-                const data = await response.json();
-
-                if (data.response === "success") {
-                    setUsersData(data.data);
-                    console.log('Usuários:', data.data);
-                } else {
-                    console.warn('Resposta inesperada:', data);
-                }
-            } catch (error) {
-                console.error('Erro ao buscar usuários:', error);
-            }
-        };
-
         fetchUsers();
     }, []);
+
+
+    useEffect(() => {
+        if (!modalOpen) {
+            console.log('modal está fechado!');
+            fetchUsers();
+        }
+    }, [modalOpen])
 
 
     const timeFormat = (dateTimeString) => {
@@ -66,6 +77,56 @@ const UserPage = () => {
         return `${day}/${month}/${year} às ${hour}:${minute}`;
     };
 
+    const handleAccountAction = async (action, login) => {
+        try {
+            const response = await fetch('/db/accountManage.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: action,
+                    login: login,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao realizar a ação');
+            }
+
+            const responseData = await response.json();
+
+            if (responseData.response) {
+                setNotification(responseData.response);
+            }
+
+            const result = await response.json();
+            console.log(result);
+
+        } catch (error) {
+            console.error('Erro:', error);
+        }
+    };
+
+    const handleDelete = (login) => {
+        handleAccountAction('delete', login);
+        fetchUsers();
+    }
+
+    const handleReset = (login) => {
+        handleAccountAction('reset', login);
+        fetchUsers();
+    }
+
+    const handleSelfReset = () => {
+
+        if (isModalPasswordOpen) {
+            setIsModalPasswordOpen(false);
+
+        } else {
+            setIsModalPasswordOpen(true);
+        }
+    }
 
     return (
 
@@ -73,7 +134,8 @@ const UserPage = () => {
         < div >
 
             {modalOpen ? <ModalRegister setIsModalOpen={setIsModalOpen} /> : ''}
-
+            {notification ? <Alert tipo={'info'} mensagem={notification} tempo={5} /> : ''}
+            {isModalPasswordOpen ? <ModalSelfReset handleSelfReset={handleSelfReset}/> : ''}
             <div className="flex grid-cols-2 gap-5 w-318 h-148 mt-1 ml-3 bg-gray-600 shadow-xl/30 rounded-sm justify-center">
 
 
@@ -91,7 +153,7 @@ const UserPage = () => {
                                         {nomeUsuario}
                                     </p>
                                     <p className="block font-sans text-base antialiased font-medium leading-relaxed text-blue-gray-900">
-                                        {hiera}
+                                        {hierarquia}
                                     </p>
                                 </div>
                                 <p className="block font-sans text-sm antialiased font-normal leading-normal text-gray-700 opacity-75">
@@ -101,7 +163,7 @@ const UserPage = () => {
                             <div className="flex p-6 pt-0">
                                 <button
                                     className="align-middle select-none font-sans font-bold text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-xs py-3 px-6 rounded-lg shadow-gray-900/10 hover:shadow-gray-900/20 focus:opacity-[0.85] active:opacity-[0.85] active:shadow-none block w-full bg-blue-gray-900/10 text-blue-gray-900 shadow-none hover:scale-105 hover:shadow-none focus:scale-105 focus:shadow-none active:scale-100"
-                                    type="button">
+                                    type="button" onClick={() => handleSelfReset()}>
                                     Alterar Senha
                                 </button>
 
@@ -263,10 +325,11 @@ const UserPage = () => {
                                                                 const action = e.target.value;
                                                                 if (action === 'delete') {
 
-                                                                    console.log('Excluir conta');
+                                                                    handleDelete(user.loginUsuario)
+
                                                                 } else if (action === 'reset') {
 
-                                                                    console.log('Resetar senha');
+                                                                    handleReset(user.loginUsuario)
                                                                 }
                                                                 e.target.value = '';
                                                             }}
