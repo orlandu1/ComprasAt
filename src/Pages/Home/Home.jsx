@@ -191,7 +191,7 @@ const Home = () => {
                 )}
 
                 <Document
-                    file="encarte.pdf"
+                    file="uploads/encartes/encarte.pdf"
                     onLoadSuccess={onDocumentLoadSuccess}
                     loading={<div className="hidden" />}
                 >

@@ -25,7 +25,7 @@ const ModalRegister = ({ setIsModalOpen }) => {
                 return false;
             }
         }
-        return true; // Todos os campos estão preenchidos
+        return true;
     };
 
     const register = async (data) => {

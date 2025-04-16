@@ -23,6 +23,8 @@ const ModalSelfReset = ({ handleSelfReset }) => {
         newPassword2: "",
     });
 
+    const [notification, setNotification] = useState();
+
     const handleChange = (e) => {
         const { id, value } = e.target;
         setNewUserData((prevData) => ({ ...prevData, [id]: value }));
@@ -30,42 +32,38 @@ const ModalSelfReset = ({ handleSelfReset }) => {
 
 
     const handleAccountAction = async (action, login, newPassword) => {
-        // try {
-        //     const response = await fetch('/db/accountManage.php', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //         },
-        //         body: JSON.stringify({
-        //             action: action,
-        //             login: login,
-        //             newPassword: newPassword
-        //         }),
-        //     });
+        setNotification('');
+        try {
+            const response = await fetch('/db/accountManage.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: action,
+                    login: login,
+                    newPassword: newPassword
+                }),
+            });
 
-        //     if (!response.ok) {
-        //         throw new Error('Erro ao realizar a ação');
-        //     }
+            if (!response.ok) {
+                throw new Error('Erro ao realizar a ação');
+            }
 
-        //     const responseData = await response.json();
+            const responseData = await response.json();
 
-        //     if (responseData.response) {
-        //         setNotification(responseData.response);
-        //     }
+            if (responseData.response) {
+                setNotification(responseData.response);
+            }
 
-        //     const result = await response.json();
-        //     console.log(result);
 
-        // } catch (error) {
-        //     console.error('Erro:', error);
-        // }
+        } catch (error) {
+            console.error('Erro:', error);
+        }
 
-        console.log(`alterando a senha : ${action} ${login} ${newPassword}`);
     };
 
-
-
-    const handleClick = (e) => {
+    const handleClick = async (e) => {
         e.preventDefault();
 
         if (newUserData.newPassword !== newUserData.newPassword2) {
@@ -73,17 +71,15 @@ const ModalSelfReset = ({ handleSelfReset }) => {
             return;
         }
 
-        handleAccountAction('selfReset', userLogin, newUserData.newPassword)
-
+        await handleAccountAction('selfReset', userLogin, newUserData.newPassword)
+        handleSelfReset(false);
     };
-
 
     return (
         <div>
 
             <div class="py-5 bg-black/70  backdrop-blur-xs transition duration-150 ease-in-out z-10 absolute top-0 right-0 bottom-0 left-0" id="modal">
-
-
+                {notification ? <Alert tipo={"success"} mensagem={"Senha alterada com sucesso!"} tempo={3} /> : ''}
                 <div role="alert" class="container mx-auto w-11/12 md:w-2/3 max-w-lg">
                     <div class="relative py-8 px-5 md:px-10 bg-white shadow-md rounded border border-gray-400">
                         <div class="w-full flex justify-start text-gray-600 mb-3">
