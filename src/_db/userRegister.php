@@ -4,6 +4,7 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
+
 class userRegister
 {
     private $nome;
@@ -48,12 +49,9 @@ class userRegister
                 loginUsuario,
                 nomeUsuario,
                 senhaUsuario,
-                emailUsuario,
                 matriculaUsuario,
-                fotoUsuario,
-                hierarquia,
-                bloqueioUsuario
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                hierarquia
+            ) VALUES (?, ?, ?, ?, ?)");
 
             if (!$pdo) {
                 echo json_encode(["response" => "Falha na conexão com o banco de dados."]);
@@ -63,15 +61,12 @@ class userRegister
             $stmt->bindValue(1, $this->login, PDO::PARAM_STR);
             $stmt->bindValue(2, $this->nome, PDO::PARAM_STR);
             $stmt->bindValue(3, password_hash($this->senha, PASSWORD_BCRYPT), PDO::PARAM_STR);
-            $stmt->bindValue(4, '', PDO::PARAM_STR);
-            $stmt->bindValue(5, $this->matricula, PDO::PARAM_STR);
-            $stmt->bindValue(6, '', PDO::PARAM_STR);
-            $stmt->bindValue(7, 1, PDO::PARAM_INT);
-            $stmt->bindValue(8, 'N', PDO::PARAM_STR);
+            $stmt->bindValue(4, $this->matricula, PDO::PARAM_STR);
+            $stmt->bindValue(5, 1, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
                 echo json_encode(["response" => "Dados gravados com sucesso!"]);
-                return 1;
+
             } else {
                 echo json_encode(["response" => "ocorreu um erro ao gravar os dados!"]);
             }
@@ -81,7 +76,7 @@ class userRegister
     }
 }
 
-$inputData =  json_decode(file_get_contents('php://input'), true);
+$inputData = json_decode(file_get_contents('php://input'), true);
 
 if ($inputData) {
 
@@ -91,8 +86,9 @@ if ($inputData) {
     $senha = $inputData['senha'];
 
     $userRegister = new userRegister($nome, $login, $matricula, $senha);
+    echo $userRegister->register();
 
-    $userRegister->register();
+
 } else {
     echo json_encode(["response" => "Erro: Dados inválidos!!"]);
 }

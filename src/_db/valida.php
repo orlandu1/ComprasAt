@@ -1,5 +1,6 @@
 <?php
 header('Content-Type: application/json');
+date_default_timezone_set('America/Sao_Paulo');
 
 $env = parse_ini_file(__DIR__ . '/../.env');
 
@@ -7,6 +8,7 @@ $servername = $env['DB_HOST'];
 $username = $env['DB_USER'];
 $password = $env['DB_PASS'];
 $dbname = $env['DB_NAME'];
+
 
 try {
     // Conexão com o banco de dados
@@ -55,7 +57,9 @@ try {
     ];
 
     // Atualizar último acesso
-    $stmt = $pdo->prepare("UPDATE usuarios SET ultimoAcesso = NOW() WHERE id = :id");
+    $dataHora = date('Y-m-d H:i:s');
+    $stmt = $pdo->prepare("UPDATE usuarios SET ultimoAcesso = :dataHora WHERE id = :id");
+    $stmt->bindParam(':dataHora', $dataHora);
     $stmt->bindParam(':id', $usuario['id']);
     $stmt->execute();
 

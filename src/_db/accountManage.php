@@ -14,11 +14,13 @@ class Manager
 
     private $action;
     private $login;
+    private $newPassword;
 
-    public function __construct($action, $login)
+    public function __construct($action, $login, $newPassword)
     {
         $this->action = $action;
         $this->login = $login;
+        $this->newPassword = $newPassword;
     }
 
     private function Delete()
@@ -82,10 +84,10 @@ class Manager
             $stmt->bindValue(2, $this->login, PDO::PARAM_STR);
 
             if ($stmt->execute()) {
-                echo json_encode(["response" => "Senha de $this->login resetada com sucesso!"]);
+                echo json_encode(["response" => "Senha de $this->login alterada com sucesso!"]);
                 return 1;
             } else {
-                echo json_encode(["response" => "ocorreu um erro ao resetar a senha desta conta  $this->login !"]);
+                echo json_encode(["response" => "ocorreu um erro ao alterada a senha desta conta  $this->login !"]);
             }
         } catch (Exception $e) {
             return 'Caught exception: ' . $e->getMessage() . "\n";
@@ -115,7 +117,7 @@ class Manager
                 return;
             }
 
-            $stmt->bindValue(1, $defaultPassword, PDO::PARAM_STR);
+            $stmt->bindValue(1, password_hash($this->newPassword, PASSWORD_BCRYPT), PDO::PARAM_STR);
             $stmt->bindValue(2, $this->login, PDO::PARAM_STR);
 
             if ($stmt->execute()) {
@@ -140,13 +142,14 @@ class Manager
 }
 
 
-$inputData =  json_decode(file_get_contents('php://input'), true);
+$inputData = json_decode(file_get_contents('php://input'), true);
 
 if ($inputData) {
 
     $action = $inputData['action'];
     $login = $inputData['login'];
-    $newPassword = $inputData['newPassword'];
+    $newPassword = isset($inputData['newPassword']) && $inputData['newPassword'] !== '' ? $inputData['newPassword'] : NULL;
+
 
     if ($action == 'selfReset') {
 
