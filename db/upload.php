@@ -27,29 +27,35 @@ class FileUploader
     {
         try {
             $this->validateInput();
+            $fileHash = md5_file($this->file['tmp_name']);
             $targetPath = $this->getTargetPath();
 
             if (!move_uploaded_file($this->file['tmp_name'], $targetPath)) {
                 throw new Exception('Falha ao mover arquivo');
             }
 
+            $env = parse_ini_file(__DIR__ . '/../.env');
+
+            $servername = $env['DB_HOST'];
+            $username = $env['DB_USER'];
+            $password = $env['DB_PASS'];
+            $dbname = $env['DB_NAME'];
+
+            $pdo = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8", $username, $password);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
             // Atualiza o banco somente se for foto de perfil
             if ($this->uploadType === 'foto') {
                 // Caminho relativo para salvar no banco
                 $relativePath = '../uploads/fotos/' . $this->login . '.png';
 
-                $env = parse_ini_file(__DIR__ . '/../.env');
-
-                $servername = $env['DB_HOST'];
-                $username = $env['DB_USER'];
-                $password = $env['DB_PASS'];
-                $dbname = $env['DB_NAME'];
-
-                $pdo = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8", $username, $password);
-                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
                 $stmt = $pdo->prepare("UPDATE usuarios SET fotoUsuario = ? WHERE loginUsuario = ?");
                 $stmt->execute([$relativePath, $this->login]);
+            }else{
+
+                $stmt = $pdo->prepare("UPDATE hashPdf SET hash = ? WHERE id = ?");
+                $stmt->execute([$fileHash, 1]);
+
             }
 
             return ['status' => 'success', 'message' => 'Arquivo processado'];

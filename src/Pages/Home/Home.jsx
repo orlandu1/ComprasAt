@@ -15,7 +15,7 @@ const Home = () => {
     const usuarioLogado = JSON.parse(localStorage.getItem('user'))?.loginUsuario;
     const [numPages, setNumPages] = useState(null);
     const documentRef = useRef(null);
-
+    const [pdfName, setPdfName] = useState('');
 
 
     const [annotations, setAnnotations] = useState(() => {
@@ -29,6 +29,11 @@ const Home = () => {
         }
     });
 
+    useEffect(() => {
+        fetch('/db/getPdf.php')
+            .then(res => res.json())
+            .then(data => setPdfName(data.pdf));
+    }, []);
 
     const [isLoading, setIsLoading] = useState(true);
     const [commentInput, setCommentInput] = useState({
@@ -187,16 +192,16 @@ const Home = () => {
                 onContextMenu={(e) => e.preventDefault()}
             >
                 {isLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70">
+                    <div className="absolute w-full inset-0 flex items-center justify-center bg-black bg-opacity-70">
                         <div className="text-yellow-400 text-2xl font-bold animate-pulse">
-                            Carregando PDF...
+                            Aguardando o PDF...
                         </div>
                     </div>
                 )}
 
                 <Document
                     ref={documentRef}
-                    file={`https://comprasat.rf.gd/uploads/encartes/encarte.pdf`}
+                    file={`https://comprasat.rf.gd/uploads/encartes/${pdfName}.pdf`}
                     onLoadSuccess={onDocumentLoadSuccess}
                     loading={<div className="hidden" />}
                     onLoadError={(error) => console.error("Erro ao carregar PDF:", error)}
@@ -214,28 +219,27 @@ const Home = () => {
                     <div
                         key={annotation.id}
                         className={`absolute cursor-pointer ${annotation.type === 'ERRADO'
-                            ? 'text-red-500'
+                            ? 'text-red-500 text-4xl'
                             : annotation.type === 'CERTO'
                                 ? 'text-green-500 text-9xl'
-                                : 'text-blue-500'
+                                : 'text-blue-500 text-4xl'
                             }`}
                         style={{
-                            top: annotation.type === 'CERTO' ? annotation.position.y - 70 : annotation.position.y - 10,
-                            left: annotation.type === 'CERTO' ? annotation.position.x - 70 : annotation.position.x - 10,
+                            top: annotation.position.y,
+                            left: annotation.position.x,
+                            transform: 'translate(-50%, -50%)', // Centraliza o ícone
+                            zIndex: 20
                         }}
-
                     >
                         {annotation.type === 'ERRADO' ? '❌' : annotation.type === 'CERTO' ? '✔️' : '💬'}
 
                         {annotation.comment && (
                             <div
-                                className="absolute top-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-sm bg-gray-800 text-white rounded-lg shadow-lg opacity-20 hover:opacity-100 transition-opacity duration-300"
+                                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold px-3 py-2 text-sm bg-orange-600 text-white rounded-lg shadow-lg opacity-20 hover:opacity-100 transition-opacity duration-300"
                                 style={{
                                     pointerEvents: 'auto',
-                                    zIndex: 10,
-                                    position: 'absolute',
-                                    top: -10,
-                                    left: 10
+                                    zIndex: 30,
+                                    minWidth: '120px'
                                 }}
                             >
                                 {annotation.comment}
@@ -264,6 +268,7 @@ const Home = () => {
                         />
                     </div>
                 )}
+
             </div>
         </div>
     );
