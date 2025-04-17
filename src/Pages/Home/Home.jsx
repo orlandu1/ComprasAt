@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Document, Page } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
@@ -7,12 +7,17 @@ import { pdfjs } from 'react-pdf';
 
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
+// pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+
 const Home = () => {
 
     const PDF_ID = 'encarte-01';
     const usuarioLogado = JSON.parse(localStorage.getItem('user'))?.loginUsuario;
-    
     const [numPages, setNumPages] = useState(null);
+    const documentRef = useRef(null);
+
+
+
     const [annotations, setAnnotations] = useState(() => {
         try {
             const saved = localStorage.getItem('pdfAnnotations');
@@ -23,6 +28,7 @@ const Home = () => {
             return [];
         }
     });
+
 
     const [isLoading, setIsLoading] = useState(true);
     const [commentInput, setCommentInput] = useState({
@@ -45,8 +51,6 @@ const Home = () => {
                 console.error('Erro ao buscar anotações:', error);
             }
         };
-
-        if (!isLoading) fetchAnnotations();
 
 
         if (!isLoading) {
@@ -191,9 +195,11 @@ const Home = () => {
                 )}
 
                 <Document
-                    file="uploads/encartes/encarte.pdf"
+                    ref={documentRef}
+                    file={`https://comprasat.rf.gd/uploads/encartes/encarte.pdf`}
                     onLoadSuccess={onDocumentLoadSuccess}
                     loading={<div className="hidden" />}
+                    onLoadError={(error) => console.error("Erro ao carregar PDF:", error)}
                 >
                     {Array.from(new Array(numPages), (_, index) => (
                         <Page

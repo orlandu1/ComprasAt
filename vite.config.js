@@ -10,7 +10,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/db': {
-        target: 'http://localhost/db/',
+        target: 'http://localhost/ComprasAt/db/',
         // target: 'https://srvsave320.br-atacadao.corp/recanto/Brsacolas/db/',
         changeOrigin: true,
         secure: false,
