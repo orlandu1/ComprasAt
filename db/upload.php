@@ -4,23 +4,25 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
-
+date_default_timezone_set('America/Sao_Paulo');
 
 class FileUploader
 {
     private $login;
     private $file;
     private $uploadType;
+    private $praca;
 
     const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
     const MAX_SIZE = 5 * 1024 * 1024; // 5MB
     const UPLOAD_TYPES = ['foto', 'encarte'];
 
-    public function __construct($login, $file, $uploadType)
+    public function __construct($login, $file, $uploadType, $praca)
     {
         $this->login = $this->sanitizeFilename($login);
         $this->file = $file;
         $this->uploadType = $uploadType;
+        $this->praca = $praca;
     }
 
     public function processUpload()
@@ -51,10 +53,10 @@ class FileUploader
 
                 $stmt = $pdo->prepare("UPDATE usuarios SET fotoUsuario = ? WHERE loginUsuario = ?");
                 $stmt->execute([$relativePath, $this->login]);
-            }else{
+            } else {
 
-                $stmt = $pdo->prepare("UPDATE hashPdf SET hash = ? WHERE id = ?");
-                $stmt->execute([$fileHash, 1]);
+                $stmt = $pdo->prepare("INSERT INTO hashpdf (praca, hash, user) VALUES (?, ?, ?)");
+                $stmt->execute([$this->praca, $fileHash, $this->login]);
 
             }
 
@@ -107,18 +109,19 @@ class FileUploader
 
     private function cleanPreviousFiles($dir)
     {
-        // Padrão de busca baseado no tipo de arquivo
-        $pattern = ($this->uploadType === 'encarte') 
-            ? $dir . '*'  // Remove todos os encartes
-            : $dir . $this->login . '.*'; // Remove todas as fotos do usuário
-    
-        $existingFiles = glob($pattern);
-    
-        foreach ($existingFiles as $file) {
-            if (is_file($file)) {
-                unlink($file);
+        // Se for upload de FOTO, deleta apenas os arquivos do usuário
+        if ($this->uploadType !== 'encarte') {
+            $pattern = $dir . $this->login . '.*'; // Padrão: "login.*" (ex: "joao.jpg")
+            $existingFiles = glob($pattern);
+
+            foreach ($existingFiles as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
             }
         }
+
+        // Se for upload de ENCARTE, não deleta nada (mantém os arquivos existentes)
     }
 
     private function sanitizeFilename($name)
@@ -146,13 +149,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Valida parâmetros
         $uploadType = $_POST['tipo'] ?? 'encarte';
         $login = $_POST['login'] ?? '';
+        $praca = $_POST['praca'] ?? '';
 
         // Valida tipo de upload
         if (!in_array($uploadType, ['foto', 'encarte'])) {
             throw new Exception('Tipo de upload inválido');
         }
 
-        $uploader = new FileUploader($login, $_FILES['arquivo'], $uploadType);
+        $uploader = new FileUploader($login, $_FILES['arquivo'], $uploadType, $praca);
         $result = $uploader->processUpload();
 
         echo json_encode($result);

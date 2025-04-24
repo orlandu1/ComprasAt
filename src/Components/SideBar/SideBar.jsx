@@ -11,7 +11,6 @@ const SideBar = () => {
 
     const menuItems = [
         { icon: <AiOutlineHome size={22} />, label: 'Início', route: '/home' },
-        { icon: <AiTwotoneContainer size={22} />, label: 'Relatório', route: '/report' },
         { icon: <AiOutlineCloudUpload size={22} />, label: 'Upload', route: '/upload' },
         { icon: <AiOutlineUser size={22} />, label: 'Usuário', route: '/userPage' },
 
@@ -23,7 +22,7 @@ const SideBar = () => {
         <div
             onMouseEnter={() => setIsHover(true)}
             onMouseLeave={() => setIsHover(false)}
-            className='bg-white w-16 hover:w-48 h-screen p-3 rounded-xl shadow-lg transition-all duration-300 border border-gray-200'
+            className='bg-white w-16 hover:w-48 h-screen p-3 rounded-xl shadow-lg transition-all duration-300 border border-gray-300'
         >
             <div className='flex flex-col space-y-4 mt-4'>
                 {menuItems.map((item, index) => (

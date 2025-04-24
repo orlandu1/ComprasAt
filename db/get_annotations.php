@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-
+date_default_timezone_set('America/Sao_Paulo');
 $env = parse_ini_file(__DIR__ . '/../.env');
 
 $servername = $env['DB_HOST'];

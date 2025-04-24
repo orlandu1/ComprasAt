@@ -17,6 +17,10 @@ try {
     $action = $_POST['action'];
     $pdf_id = $_POST['pdf_id'];
 
+    if ($pdf_id == 'null' || $pdf_id == '') {
+        return;
+    }
+
     switch ($action) {
         case 'add':
             $stmt = $conn->prepare("
