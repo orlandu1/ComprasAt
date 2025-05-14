@@ -1,6 +1,11 @@
 <?php
 header('Content-Type: application/json');
 
+
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
 $env = parse_ini_file(__DIR__ . '/../.env');
 
 $servername = $env['DB_HOST'];
@@ -13,18 +18,18 @@ $inputData = json_decode(file_get_contents('php://input'), true);
 $login = $inputData['login'];
 
 try {
-    // Conexão com o banco de dados
+    // Conexï¿½o com o banco de dados
     $pdo = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Buscar todos os usuários no banco de dados
+    // Buscar todos os usuï¿½rios no banco de dados
     $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE loginUsuario <> ?");
 
     $stmt->bindValue(1, $login, PDO::PARAM_STR);
     
     $stmt->execute();
 
-    // Buscar todos os usuários como array associativo
+    // Buscar todos os usuï¿½rios como array associativo
     $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Retornar os dados em formato JSON

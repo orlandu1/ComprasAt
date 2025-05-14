@@ -2,12 +2,12 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Document, Page } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-
 import { pdfjs } from 'react-pdf';
+import CorrecoesComponent from '../../Helpers/CorrecoesComponent';
 
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
-const pdfRender = ({ praca }) => {
+const Praca = ({ praca, token }) => {
 
     if (!praca) return null;
 
@@ -15,9 +15,8 @@ const pdfRender = ({ praca }) => {
     const [numPages, setNumPages] = useState(null);
     const documentRef = useRef(null);
     const [pdfHash, setpdfHash] = useState('');
-
-
     const [annotations, setAnnotations] = useState([]);
+
 
     useEffect(() => {
         const fetchPdf = async () => {
@@ -28,12 +27,13 @@ const pdfRender = ({ praca }) => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ praca: praca }),
+                    body: JSON.stringify({ praca: praca, token: token }),
                 });
 
                 const data = await response.json();
 
                 setpdfHash(data.hash);
+
                 await fetchAnnotations(data.hash);
 
             } catch (error) {
@@ -93,12 +93,14 @@ const pdfRender = ({ praca }) => {
             const formData = new FormData();
             formData.append('pdf_id', pdfHash);
             formData.append('action', action);
+            formData.append('TokenCamp', token);
             formData.append('data', JSON.stringify(annotation));
 
             await fetch(`/db/handle_annotation.php`, {
                 method: 'POST',
                 body: formData,
             });
+
         } catch (error) {
             console.error('Erro ao sincronizar:', error);
         }
@@ -202,7 +204,12 @@ const pdfRender = ({ praca }) => {
     };
 
     return (
-        <div className="flex w-318 h-125 ml-3 bg-gray-600 shadow-xl/30 rounded-sm justify-center">
+        <div className="flex gap-2 space-x-5 w-318 h-149 ml-3 bg-gray-600 shadow-xl/30 rounded-sm justify-center">
+
+            <div>
+                <CorrecoesComponent praca={praca} token={token} annotations={annotations} />
+            </div>
+
             <div
                 className="relative overflow-auto h-full cursor-pointer rounded-lg bg-white"
 
@@ -243,21 +250,23 @@ const pdfRender = ({ praca }) => {
                     </div>
                 )}
 
-                <Document
-                    ref={documentRef}
-                    file={`/uploads/encartes/${pdfHash}.pdf`}
-                    onLoadSuccess={onDocumentLoadSuccess}
-                    loading={<div className="hidden" />}
-                    onLoadError={(error) => console.error("Erro ao carregar PDF:", error)}
-                >
-                    {Array.from(new Array(numPages), (_, index) => (
-                        <Page
-                            key={`page_${index + 1}`}
-                            pageNumber={index + 1}
-                            width={800}
-                        />
-                    ))}
-                </Document>
+                <div>
+                    <Document
+                        ref={documentRef}
+                        file={`/uploads/encartes/${pdfHash}.pdf`}
+                        onLoadSuccess={onDocumentLoadSuccess}
+                        loading={<div className="hidden" />}
+                        onLoadError={(error) => console.error("Erro ao carregar PDF:", error)}
+                    >
+                        {Array.from(new Array(numPages), (_, index) => (
+                            <Page
+                                key={`page_${index + 1}`}
+                                pageNumber={index + 1}
+                                width={800}
+                            />
+                        ))}
+                    </Document>
+                </div>
 
                 {annotations.map((annotation) => (
                     <div
@@ -318,4 +327,4 @@ const pdfRender = ({ praca }) => {
     );
 };
 
-export default pdfRender;
+export default Praca;

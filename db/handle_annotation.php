@@ -16,6 +16,7 @@ try {
     $data = json_decode($_POST['data'], true);
     $action = $_POST['action'];
     $pdf_id = $_POST['pdf_id'];
+    $tokenCamp = $_POST['TokenCamp'];
 
     if ($pdf_id == 'null' || $pdf_id == '') {
         return;
@@ -25,8 +26,8 @@ try {
         case 'add':
             $stmt = $conn->prepare("
                 INSERT INTO annotations 
-                (id, pdf_id, user_name, type, position_x, position_y, comment)
-                VALUES (:id, :pdf_id, :user, :type, :x, :y, :comment)
+                (id, pdf_id, campanha_id, user_name, type, position_x, position_y, comment)
+                VALUES (:id, :pdf_id, :campanha_id, :user, :type, :x, :y, :comment)
                 ON DUPLICATE KEY UPDATE
                 type = VALUES(type), 
                 position_x = VALUES(position_x), 
@@ -38,6 +39,7 @@ try {
             $stmt->execute([
                 ':id' => $data['id'],
                 ':pdf_id' => $pdf_id,
+                ':campanha_id' => $tokenCamp,
                 ':user' => $data['user_name'] ?? 'Anônimo',
                 ':type' => $data['type'],
                 ':x' => $data['position']['x'],

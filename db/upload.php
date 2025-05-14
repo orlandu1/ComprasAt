@@ -55,7 +55,7 @@ class FileUploader
                 $stmt->execute([$relativePath, $this->login]);
             } else {
 
-                $stmt = $pdo->prepare("INSERT INTO hashpdf (praca, hash, user) VALUES (?, ?, ?)");
+                $stmt = $pdo->prepare("INSERT INTO hashpdf (praca, pdf_id, user) VALUES (?, ?, ?)");
                 $stmt->execute([$this->praca, $fileHash, $this->login]);
 
             }
@@ -150,6 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $uploadType = $_POST['tipo'] ?? 'encarte';
         $login = $_POST['login'] ?? '';
         $praca = $_POST['praca'] ?? '';
+        
 
         // Valida tipo de upload
         if (!in_array($uploadType, ['foto', 'encarte'])) {

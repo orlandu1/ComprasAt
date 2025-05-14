@@ -194,8 +194,7 @@ const UserPage = () => {
             {modalOpen ? <ModalRegister setIsModalOpen={setIsModalOpen} /> : ''}
             {notification ? <Alert tipo={'info'} mensagem={notification} tempo={5} /> : ''}
             {isModalPasswordOpen ? <ModalSelfReset handleSelfReset={handleSelfReset} /> : ''}
-            <div className="flex grid-cols-2 gap-5 w-318 h-148 mt-1 ml-3 bg-gray-600 shadow-xl/30 rounded-sm justify-center">
-
+            <div className="flex p-4 grid-cols-2 gap-5 w-400 h-148 mt-1 ml-3 bg-gray-600 shadow-xl/30 rounded-sm justify-center">
 
                 <div className="flex  items-center">
                     <div className="max-w-[720px] mx-auto">

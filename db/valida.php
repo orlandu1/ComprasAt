@@ -4,6 +4,10 @@ date_default_timezone_set('America/Sao_Paulo');
 
 $env = parse_ini_file(__DIR__ . '/../.env');
 
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
 $servername = $env['DB_HOST'];
 $username = $env['DB_USER'];
 $password = $env['DB_PASS'];
