@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
         // Buscar o hash (pdf_id)
-        $stmt = $pdo->prepare("SELECT pdf_id, itens FROM hashpdf WHERE praca = ? AND campanha_id = ? LIMIT 1");
+        $stmt = $pdo->prepare("SELECT pdf_id, itens FROM hashpdf WHERE praca = ? AND campanha_id = ? ORDER BY id DESC LIMIT 1");
         $stmt->execute([$praca, $TokenCampanha]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $pdfId = $row['pdf_id'] ?? null;

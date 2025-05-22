@@ -12,7 +12,7 @@ $dbname = $env['DB_NAME'];
 
 try {
     $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
-    $stmt = $conn->prepare("SELECT * FROM annotations WHERE pdf_id = :pdf_id");
+    $stmt = $conn->prepare("SELECT id, type, user_name, position_x, position_y, comment FROM annotations WHERE pdf_id = :pdf_id");
     $stmt->execute([':pdf_id' => $_GET['pdf_id']]);
     
     $annotations = [];

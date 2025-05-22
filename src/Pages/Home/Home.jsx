@@ -9,7 +9,6 @@ const Home = () => {
   const [entrarNaCampanha, setEntrarNaCampanha] = useState(false);
   const [cadastrarCampanhaTela, setCadastrarCampanhaTela] = useState(true);
   const [uploadArquivos, setUploadArquivos] = useState(false);
-  const [itens, setItens] = useState(0);
   const [campanhas, setCampanhas] = useState([{ titulo: "", campanha_id: "", periodo1: "", periodo2: "", progresso: 0 }]);
   const [selectedFiles, setSelectedFiles] = useState({});
   const [tokenCampanha, setTokenCampanha] = useState('');
@@ -38,37 +37,45 @@ const Home = () => {
     const formData = new FormData();
 
     Object.entries(selectedFiles).forEach(([pracaId, file]) => {
-      formData.append(`files[${pracaId}]`, file);
+      formData.append('files[]', file);               // Envia como files[]
+      formData.append('pracaIds[]', pracaId);         // Envia a relação
     });
 
     formData.append('tokenCampanha', tokenCampanha);
-
     formData.append("login", JSON.parse(localStorage.getItem("user")).loginUsuario);
 
     fetch('/db/uploadEncartes.php', {
       method: 'POST',
       body: formData,
     })
-      .then(response => response.text()) // ou .json() se o PHP retornar JSON
+      .then(response => response.json()) // PHP retorna JSON
       .then(data => {
         console.log("Resposta do servidor:", data);
 
-        setEntrarNaCampanha(false);
-        setCadastrarCampanhaTela(true);
-        setUploadArquivos(false);
+        if (data.success) {
+
+          alert("arquivo enviado com sucesso!");
+
+          setEntrarNaCampanha(false);
+          setCadastrarCampanhaTela(true);
+          setUploadArquivos(false);
+        } else {
+
+          alert("Algo deu errado!" + " " + data);
+
+        }
 
       })
       .catch(error => {
         console.error("Erro ao enviar:", error);
       });
-
-
   };
+
 
 
   const handleCadastrarCampanha = async () => {
 
-    if (!titulo || !periodo1 || !periodo2 || !itens || itens.length === 0) {
+    if (!titulo || !periodo1 || !periodo2 === 0) {
       alert("Algum dado obrigatório está vazio.");
       return null;
     }
@@ -76,8 +83,7 @@ const Home = () => {
     const dado = {
       titulo: titulo,
       periodo1: periodo1,
-      periodo2: periodo2,
-      itens: itens
+      periodo2: periodo2
     };
 
     try {
@@ -92,7 +98,7 @@ const Home = () => {
       setNome("");
       setPeriodo1("");
       setPeriodo2("");
-      setItens(0);
+
 
     } catch (err) {
       console.error("Erro ao cadastrar dados do catálogo", err);
@@ -292,19 +298,7 @@ const Home = () => {
 
                 <span className="font-semibold">|</span>
 
-                <div className="flex flex-col">
-                  <label className="font-semibold mb-1">Itens:</label>
-                  <input
-                    type="number"
-                    value={itens}
-                    onChange={(e) => setItens(e.target.value)}
-                    className="border px-2 py-1 rounded w-20"
-                  />
-                </div>
-
-                <span className="font-semibold">|</span>
-
-                <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600" onClick={handleCadastrarCampanha}>
+                <button className="bg-green-500 text-white px-1 py-1 rounded hover:bg-green-600" onClick={handleCadastrarCampanha}>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline-block mr-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path d="M10 2a1 1 0 011 1v6h6a1 1 0 110 2h-6v6a1 1 0 11-2 0v-6H3a1 1 0 110-2h6V3a1 1 0 011-1z" />
                   </svg>

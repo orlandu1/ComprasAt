@@ -6,7 +6,7 @@ USE `orlando`;
 -- Tabela: annotations
 CREATE TABLE `annotations` (
     `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-    `pdf_id` VARCHAR(50) NOT NULL,
+    `pdf_id` VARCHAR(100) NOT NULL,
     `campanha_id` VARCHAR(100) NOT NULL,
     `user_name` VARCHAR(100) NOT NULL,
     `type` ENUM('CERTO', 'ERRADO', 'COMENTAR') NOT NULL,

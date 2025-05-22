@@ -10,12 +10,12 @@ export default defineConfig({
   server: {
     proxy: {
       '/db': {
-        target: 'http://localhost/ComprasAt/db/',
+        target: 'http://localhost:8080/',
         // target: 'https://srvsave320.br-atacadao.corp/recanto/Brsacolas/db/',
         changeOrigin: true,
         secure: false,
         ws: true,
-        rewrite: (path) => path.replace(/^\/db/, ''),
+        rewrite: (path) => path.replace('', ''),
       },
     },
   },

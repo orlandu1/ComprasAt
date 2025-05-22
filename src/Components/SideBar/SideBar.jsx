@@ -11,8 +11,7 @@ const SideBar = () => {
 
     const menuItems = [
         { icon: <AiOutlineHome size={22} />, label: 'Início', route: '/home' },
-        { icon: <AiOutlineCloudUpload size={22} />, label: 'Upload', route: '/upload' },
-        { icon: <AiOutlineUser size={22} />, label: 'Usuário', route: '/userPage' },
+        { icon: <AiOutlineUser size={22} />, label: 'Usuário', route: '/userPage' }
 
     ];
 

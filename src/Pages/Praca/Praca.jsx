@@ -16,7 +16,12 @@ const Praca = ({ praca, token }) => {
     const documentRef = useRef(null);
     const [pdfHash, setpdfHash] = useState('');
     const [annotations, setAnnotations] = useState([]);
+    const [pdfAtualizado, setPdfAtualizado] = useState(false);
 
+    const handlePdfChanged = () => {
+        console.log("O PDF foi atualizado. Faça algo aqui.");
+        setPdfAtualizado(true);
+    }
 
     useEffect(() => {
         const fetchPdf = async () => {
@@ -44,7 +49,9 @@ const Praca = ({ praca, token }) => {
         };
 
         fetchPdf();
-    }, [praca]); // Adicionei 'praca' como dependência
+        setPdfAtualizado(false);
+
+    }, [praca, pdfAtualizado]);
 
     const [isLoading, setIsLoading] = useState(true);
     const [commentInput, setCommentInput] = useState({
@@ -83,8 +90,8 @@ const Praca = ({ praca, token }) => {
 
     const syncAnnotation = async (action, annotation) => {
 
-        if (pdfHash == null) {
-            alert('Você não pode deixar esta marcação aqui!');
+        if (pdfHash == null || pdfHash == '') {
+            alert('Não há PDF a ser marcado! faça o upload e volte novamente!');
             await fetchAnnotations();
             return;
         }
@@ -207,7 +214,7 @@ const Praca = ({ praca, token }) => {
         <div className="flex gap-2 space-x-5 w-318 h-149 ml-3 bg-gray-600 shadow-xl/30 rounded-sm justify-center">
 
             <div>
-                <CorrecoesComponent praca={praca} token={token} annotations={annotations} />
+                <CorrecoesComponent praca={praca} token={token} annotations={annotations} pdfHash={pdfHash} onPdfChanged={handlePdfChanged} />
             </div>
 
             <div

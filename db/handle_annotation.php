@@ -22,6 +22,8 @@ try {
         return;
     }
 
+    $conn->beginTransaction();
+
     switch ($action) {
         case 'add':
             $stmt = $conn->prepare("
@@ -55,6 +57,8 @@ try {
             break;
     }
 
+    $conn->commit();
+
     echo json_encode(['success' => true]);
 
 } catch (PDOException $e) {
@@ -62,5 +66,8 @@ try {
         'success' => false,
         'error' => $e->getMessage()
     ]);
+
+    $conn->rollBack();
+
 }
 ?>
