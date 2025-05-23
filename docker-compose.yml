@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  php-apache-pdo-server:
+    build: .
+    container_name: php-apache-pdo-server
+    ports:
+      - "8080:80"
+    volumes:
+      - ./db:/var/www/html/db
+      - ./uploads:/var/www/html/uploads
+      - ./.env:/var/www/html/.env
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html/db
