@@ -13,6 +13,8 @@ const Home = () => {
   const [selectedFiles, setSelectedFiles] = useState({});
   const [tokenCampanha, setTokenCampanha] = useState('');
   const [campanhaAtiva, setCampanhaAtiva] = useState([]);
+  const [activePraca, setActivePraca] = useState();
+  const [ispdfExiste, setIsPdfExiste] = useState(false);
 
 
   const handleFileChange = (pracaId, file) => {
@@ -50,7 +52,6 @@ const Home = () => {
     })
       .then(response => response.json()) // PHP retorna JSON
       .then(data => {
-        console.log("Resposta do servidor:", data);
 
         if (data.success) {
 
@@ -93,7 +94,6 @@ const Home = () => {
         body: JSON.stringify(dado),
       });
       const data = await response.json();
-      console.log(data.response);
       await getCampanhas();
       setNome("");
       setPeriodo1("");
@@ -132,7 +132,6 @@ const Home = () => {
           body: JSON.stringify(campanha),
         });
         const data = await response.json();
-        console.log(data.response);
         await getCampanhas();
       } catch (err) {
         console.error("Erro ao remover campanha", err);
@@ -141,7 +140,6 @@ const Home = () => {
   }
 
   const entrarCampanha = (campanha) => {
-    console.log(campanha);
     setTokenCampanha(campanha.campanha_id);
     setEntrarNaCampanha(true);
     setCadastrarCampanhaTela(false);
@@ -150,7 +148,6 @@ const Home = () => {
   }
 
   const UploadArquivosCampanha = (campanha) => {
-    console.log(campanha);
     setCampanhaAtiva(campanha.titulo);
     setTokenCampanha(campanha.campanha_id);
     setUploadArquivos(true);
@@ -160,7 +157,20 @@ const Home = () => {
 
   }
 
-  const [activePraca, setActivePraca] = useState(null);
+
+  const pdfExiste = (estado) => {
+
+    setIsPdfExiste(estado);
+  }
+
+  const mudarPraca = (id) => {
+
+    if (pdfExiste) {
+      setActivePraca(id);
+    } else {
+      setEntrarNaCampanha(true);
+    }
+  }
 
   const pracas = [
     { id: "df", label: "DF" },
@@ -174,6 +184,8 @@ const Home = () => {
     { id: "araguaina", label: "Araguaina" },
     { id: "gurupi", label: "Gurupi" },
   ];
+
+
 
   const TelaDeCadastro = () => {
     setCadastrarCampanhaTela(true);
@@ -216,7 +228,7 @@ const Home = () => {
                         ? "bg-blue-600 text-white shadow-md"
                         : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
                         }`}
-                      onClick={() => setActivePraca(praca.id)}
+                      onClick={() => mudarPraca(praca.id)}
                     >
                       {praca.label}
                     </button>
@@ -228,8 +240,13 @@ const Home = () => {
               {/* Área de conteúdo */}
               <div className="flex p-4 bg-gray-50 overflow-auto">
 
+                <Praca
+                  key={activePraca || 'resumo'}
+                  praca={activePraca}
+                  token={tokenCampanha}
+                  pdfExiste={pdfExiste}
+                />
 
-                <Praca key={activePraca || 'resumo'} praca={activePraca} token={tokenCampanha} />
                 {!activePraca && (
                   <div className="h-full w-full flex flex-col items-center justify-center text-center p-8">
                     <svg
@@ -343,7 +360,7 @@ const Home = () => {
 
                       {/* Nuvem de Upload */}
                       <span
-                        className="cursor-pointer text-xl"
+                        className="cursor-pointer text-4xl"
                         title="Upload Arquivos Nesta Campanha"
                         onClick={() => UploadArquivosCampanha(campanha)}
                       >
@@ -351,7 +368,7 @@ const Home = () => {
                       </span>
 
                       <span
-                        className="cursor-pointer text-red-600 text-xl"
+                        className="cursor-pointer text-red-600 text-4xl"
                         title="Remover"
                         onClick={() => removerCampanha(campanha)}
                       >
@@ -359,7 +376,7 @@ const Home = () => {
                       </span>
 
                       <span
-                        className="cursor-pointer text-green-600 text-xl"
+                        className="cursor-pointer text-green-600 text-4xl"
                         title="Entrar"
                         onClick={() => entrarCampanha(campanha)}
                       >
@@ -384,7 +401,7 @@ const Home = () => {
             <i>Token: <small className="text-sm">{tokenCampanha}</small></i>
 
 
-            <h1 className="text-3xl font-bold mb-8 text-gray-800">Upload de Arquivos na Campanha: {campanhaAtiva} </h1>
+            <h1 className="text-3xl font-bold mb-8 text-gray-800">Upload *Incial* de Arquivos na Campanha: {campanhaAtiva} </h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {pracas.map((praca) => (

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 
-export default function CorrecoesComponent({ praca, token, annotations, onPdfChanged }) {
+export default function CorrecoesComponent({ praca, token, annotations, onPdfChanged, setpdfHash, fetchAnnotations }) {
     const [totalItens, setTotalItens] = useState(0);
     const [correcoes, setCorrecoes] = useState(0);
     const [salvo, setSalvo] = useState(false);
@@ -10,7 +10,14 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
     const [file, setFile] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState('');
-
+    const [pdfExiste, setPdfExiste] = useState(true);
+    const [fileCorrections, setFileCorrections] = useState([]);
+    const [menuVisivel, setMenuVisivel] = useState(false);
+    const [posicao, setPosicao] = useState({ x: 0, y: 0 });
+    const [menuFile, setMenuFile] = useState();
+    const [isManualRender, setIsManualRender] = useState(false);
+    const [selectedHash, setSelectedHash] = useState(null);
+    const [progresso, setProgresso] = useState(0);
 
 
     useEffect(() => {
@@ -27,31 +34,43 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
 
                 const data = await response.json();
 
-                setCorrecoes(data.correcoes);
-                setTotalItens(prev => prev === 0 ? data.itens : prev);
+                if (data.hash) {
+                    setPdfExiste(true);
+                } else {
+                    setPdfExiste(false);
+                }
 
+                if (!isManualRender) {
+
+                    setCorrecoes(data.correcoes);
+                    setTotalItens(data.itens);
+                }
 
             } catch (error) {
                 console.error('Erro:', error);
-
             }
         };
-
         fetchPdf();
-
-    }, [annotations, praca]);
-
-    const progresso = Math.round((correcoes / totalItens) * 100);
-
+    }, [annotations, praca, isManualRender]);
 
     useEffect(() => {
-        if (!Number.isFinite(progresso)) {
-            setisPercentValid(false);
-        } else {
-            setisPercentValid(true);
-        }
+        // Só calcula se os dois estados já foram carregados com valores válidos
+        if (
+            typeof correcoes === 'number' &&
+            typeof totalItens === 'number' &&
+            totalItens > 0
+        ) {
+            const progressoCalculado = Math.round((correcoes / totalItens) * 100);
 
-    }, [annotations, praca, salvo])
+            if (Number.isFinite(progressoCalculado)) {
+                setisPercentValid(true);
+                setProgresso(progressoCalculado);
+            } else {
+                setisPercentValid(false);
+                setProgresso(0);
+            }
+        }
+    }, [correcoes, totalItens]);
 
 
 
@@ -61,8 +80,6 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
             setUploadStatus('');
         }
     };
-
-
 
     const handleUpload = async () => {
         if (!file) return;
@@ -85,11 +102,17 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
 
                 alert("arquivo enviado com sucesso!");
                 setUploadStatus('success');
-                console.log("Resposta do servidor:", data);
                 setIsUploading(false);
                 onPdfChanged();
                 setIsOpenModalUpload(false);
+                getFileCorrections();
                 setFile('');
+
+                useEffect(() => {
+                    if (fileCorrections.length > 0 && !selectedHash) {
+                        setSelectedHash(fileCorrections[fileCorrections.length - 1].hash);
+                    }
+                }, [fileCorrections]);
 
 
             }
@@ -101,8 +124,6 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
             setIsUploading(false);
         }
     };
-
-
 
     const handleItensChange = async (e) => {
         const valor = Number(e.target.value);
@@ -127,11 +148,76 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
         }
     };
 
-
     const handleModalUpload = (is) => {
         setIsOpenModalUpload(is);
+        getFileCorrections();
     }
 
+    const getFileCorrections = async () => {
+        try {
+            const response = await fetch("/db/getPdfList.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ praca: praca, token: token }),
+            });
+
+            const data = await response.json();
+            const arquivos = data.map(item => item.arquivo);
+            setFileCorrections(arquivos);
+
+        } catch (err) {
+            console.error("Erro ao buscar status do arquivo", err);
+        }
+    };
+
+    useEffect(() => {
+        getFileCorrections();
+    }, [file, annotations, praca, salvo])
+
+
+    const contextDownload = (event, file) => {
+        event.preventDefault();
+        setMenuFile(file);
+        setPosicao({ x: event.pageX, y: event.pageY });
+        setMenuVisivel(true);
+    };
+
+    const handleCliqueFora = () => {
+        setMenuVisivel(false);
+    };
+
+    const handleBaixar = () => {
+        const href = '/uploads/encartes/' + menuFile;
+        const a = document.createElement('a');
+        a.href = href;
+        a.download = menuFile;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        setMenuVisivel(false);
+    };
+
+    useEffect(() => {
+        document.addEventListener('click', handleCliqueFora);
+        return () => document.removeEventListener('click', handleCliqueFora);
+    }, []);
+
+
+    const renderPdf = async (pdf, correcoes, itens) => {
+        setIsManualRender(true);
+        setCorrecoes(correcoes);
+        await setpdfHash(pdf);
+        await fetchAnnotations(pdf);
+        setSelectedHash(pdf);
+        setTotalItens(itens)
+    }
+
+    useEffect(() => {
+        if (fileCorrections.length > 0 && !selectedHash) {
+            setSelectedHash(fileCorrections[fileCorrections.length - 1].hash);
+        }
+    }, [fileCorrections]);
 
 
     return (
@@ -225,51 +311,103 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
 
             ) : null}
 
-            <div className="w-full bg-gray-200 rounded-full h-6 relative overflow-hidden text-center">
+            {pdfExiste ? (
+                <div className="w-full bg-gray-200 rounded-full h-6 relative overflow-hidden text-center">
 
-                {!isPercentValid ? 'Estabeleça uma meta de correções!' : null}
+                    {!isPercentValid ? 'Estabeleça uma meta de correções!' : null}
 
-                <div
-                    className="bg-blue-500 h-full text-white text-sm flex items-center justify-center transition-all duration-300"
-                    style={{ width: `${progresso}%` }}
-                >
-                    {progresso}%
+                    <div
+                        className="bg-blue-500 h-full text-white text-sm flex items-center justify-center transition-all duration-300"
+                        style={{ width: `${progresso}%` }}
+                    >
+                        {progresso}%
+                    </div>
                 </div>
-            </div>
+            ) : ('')}
 
             {/* Campo para definir total de itens */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Total de Correções Esperadas
-                    <b className="text-green-500"> .: {totalItens} {salvo && <b className="text-green-500"> Salvo!</b>}</b></label>
-                <input
-                    type="number"
-                    min="1"
-                    value={totalItens}
-                    onChange={handleItensChange}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-center"
-                />
-            </div>
+            {pdfExiste ? (
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Total de Correções Esperadas
+                        <b className="text-green-500"> .: {totalItens} {salvo && <b className="text-green-500"> Salvo!</b>}</b></label>
+
+
+
+                    <input
+                        type="text"
+                        min="1"
+                        value={totalItens}
+                        onChange={handleItensChange}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-center"
+                    />
+
+                </div>) : (<div className="text-center">PDF não encontrado!</div>)}
 
             {/* Correções */}
-            <div className="border rounded-lg p-4 space-y-3">
-                <h2 className="text-lg font-semibold text-center">Correções</h2>
-                {/* {envios.map((correcao, index) => (
-                    <div
-                        key={index}
-                        className="w-10 h-10 mx-auto flex items-center justify-center rounded-full border text-sm font-medium bg-gray-100"
-                    >
-                        {index + 1}
+            {pdfExiste ? (
+                <div className="border rounded-lg p-4 space-y-3">
+                    <h2 className="text-lg font-semibold text-center">Correções Enviadas</h2>
+                    <div className="flex gap-2">
+                        {fileCorrections.map((item, index) => (
+                            <a
+                                key={item.id}
+                                // href={'/uploads/encartes/' + item.filename}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`w-10 h-15 border rounded-full shadow transition-shadow duration-300 flex flex-col justify-center items-center text-center cursor-pointer
+                                ${selectedHash === item.hash
+                                        ? 'bg-green-900 border-gray-500 text-white shadow-inner'  // Ativo: escuro
+                                        : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-yellow-900 transition-all' // Inativo: claro
+                                    }`}
+
+                                onContextMenu={(e) => contextDownload(e, item.filename)}
+                                onClick={() => renderPdf(item.hash, item.correcoes, item.itens)}
+                                style={{ userSelect: 'none' }}
+                                title={'Clique direito: inicia o download do arquivo PDF; clique esquerdo: exibe o PDF no visualizador'}
+                            >
+                                <div className="text-3xl">📝</div>
+                                <div className="mt-1 text-xs text-gray-300 font-medium">
+                                    {index + 1}°
+                                </div>
+                            </a>
+                        ))}
                     </div>
-                ))} */}
-            </div>
+                </div>
+            ) : ('')}
+
+            {menuVisivel && (
+                <ul
+                    style={{
+                        position: 'absolute',
+                        top: posicao.y,
+                        left: posicao.x,
+                        backgroundColor: 'white',
+                        border: '1px solid #ccc',
+                        padding: '8px',
+                        listStyle: 'none',
+                        zIndex: 1000,
+                    }}
+                >
+                    <li
+                        style={{ padding: '4px 8px', cursor: 'pointer' }}
+                        onClick={handleBaixar}
+                    >
+                        Baixar
+                    </li>
+                </ul>
+            )}
 
             {/* Botão para subir correção */}
-            <button
-                onClick={() => handleModalUpload(true)}
-                className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
-            >
-                Subir Próxima Correção
-            </button>
+
+            {pdfExiste ? (
+
+                <button
+                    onClick={() => handleModalUpload(true)}
+                    className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+                >
+                    Subir Próxima Correção
+                </button>
+            ) : ('')}
         </div>
     );
 }

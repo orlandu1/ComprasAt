@@ -16,34 +16,48 @@ header('Content-Type: application/json');
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
     $praca = $data['praca'];
+    $token = $data['token'];
 
     try {
         $pdo = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8", $username, $password);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
         // Consulta no banco de dados
-        $stmt = $pdo->prepare("SELECT pdf_id, user FROM hashpdf WHERE praca = ? LIMIT 1");
-        $stmt->execute([$praca]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt = $pdo->prepare("SELECT id, pdf_id, user, itens FROM hashpdf WHERE praca = ? AND campanha_id = ? ORDER BY id ASC;");
+        $stmt->execute([$praca, $token]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        $dirPath = "../uploads/encartes/"; // Caminho do diretório dos PDFs
+        $resultados = [];
 
-        // Verifica se o arquivo existe no diretório
-        $dirPath = "../uploads/encartes/"; // Substitua para o caminho real
-        $filePath = "$dirPath/" . $row['pdf_id'] . ".pdf";
-        $fileExists = file_exists($filePath);
-        $fileInfo = $fileExists ? [
-            'exists' => true,
-            'filename' => "$praca.pdf",
-            'lastModified' => date("Y-m-d H:i:s", filemtime($filePath)),
-            'user' => $row['user']
+        foreach ($rows as $row) {
+            $filePath = $dirPath . $row['pdf_id'] . ".pdf";
+            $fileExists = file_exists($filePath);
 
-        ] : ['exists' => false];
+            $totalCorrecoes = 0;
+            if ($fileExists) {
+                $countStmt = $pdo->prepare("SELECT COUNT(id) FROM annotations WHERE pdf_id = ?");
+                $countStmt->execute([$row['pdf_id']]);
+                $totalCorrecoes = (int) $countStmt->fetchColumn();
+            }
 
-        echo json_encode([
-            'hash' => $row['pdf_id'] ?? null,
-            'arquivo' => $fileInfo
-        ]);
+            $resultados[] = [
+                'arquivo' => $fileExists ? [
+                    'id' => $row['id'],
+                    'exists' => true,
+                    'filename' => $row['pdf_id'] . ".pdf",
+                    'lastModified' => date("Y-m-d H:i:s", filemtime($filePath)),
+                    'user' => $row['user'],
+                    'itens' => $row['itens'],
+                    'correcoes'=> $totalCorrecoes,
+                    'hash' => $row['pdf_id']
+                ] : ['exists' => false]
+            ];
+        }
+
+        echo json_encode($resultados);
     } catch (PDOException $e) {
         echo json_encode(['error' => $e->getMessage()]);
     }
+
 }

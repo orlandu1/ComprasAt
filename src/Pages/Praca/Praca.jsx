@@ -1,13 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Document, Page } from 'react-pdf';
+import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-import { pdfjs } from 'react-pdf';
 import CorrecoesComponent from '../../Helpers/CorrecoesComponent';
 
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
-const Praca = ({ praca, token }) => {
+const Praca = ({ praca, token, pdfExiste }) => {
 
     if (!praca) return null;
 
@@ -17,9 +16,9 @@ const Praca = ({ praca, token }) => {
     const [pdfHash, setpdfHash] = useState('');
     const [annotations, setAnnotations] = useState([]);
     const [pdfAtualizado, setPdfAtualizado] = useState(false);
+    const [pdfexiste, setPdfExiste] = useState(true);
 
     const handlePdfChanged = () => {
-        console.log("O PDF foi atualizado. Faça algo aqui.");
         setPdfAtualizado(true);
     }
 
@@ -39,17 +38,25 @@ const Praca = ({ praca, token }) => {
 
                 setpdfHash(data.hash);
 
+                if (data.hash) {
+                    pdfExiste(true);
+                    setPdfExiste(true);
+                } else {
+                    pdfExiste(false);
+                    setPdfExiste(false);
+                }
+
                 await fetchAnnotations(data.hash);
 
             } catch (error) {
                 console.error('Erro:', error);
-                // Você pode querer tratar o erro de forma mais adequada aqui
-                // Por exemplo, setar um estado de erro
+
             }
         };
 
         fetchPdf();
         setPdfAtualizado(false);
+        setIsLoading(false);
 
     }, [praca, pdfAtualizado]);
 
@@ -75,7 +82,6 @@ const Praca = ({ praca, token }) => {
             if (data.success)
                 setAnnotations(data.annotations);
 
-            console.log('dados retornados:' + data.annotations);
 
         } catch (error) {
             console.error('Erro ao buscar anotações:', error);
@@ -92,7 +98,7 @@ const Praca = ({ praca, token }) => {
 
         if (pdfHash == null || pdfHash == '') {
             alert('Não há PDF a ser marcado! faça o upload e volte novamente!');
-            await fetchAnnotations();
+            // await fetchAnnotations();
             return;
         }
 
@@ -118,6 +124,7 @@ const Praca = ({ praca, token }) => {
     const onDocumentLoadSuccess = ({ numPages }) => {
         setNumPages(numPages);
         setIsLoading(false);
+
     };
 
     const handleMouseClick = (event) => {
@@ -214,7 +221,14 @@ const Praca = ({ praca, token }) => {
         <div className="flex gap-2 space-x-5 w-318 h-149 ml-3 bg-gray-600 shadow-xl/30 rounded-sm justify-center">
 
             <div>
-                <CorrecoesComponent praca={praca} token={token} annotations={annotations} pdfHash={pdfHash} onPdfChanged={handlePdfChanged} />
+                <CorrecoesComponent
+                    praca={praca}
+                    token={token}
+                    annotations={annotations}
+                    pdfHash={pdfHash}
+                    onPdfChanged={handlePdfChanged}
+                    setpdfHash={setpdfHash}
+                    fetchAnnotations={fetchAnnotations} />
             </div>
 
             <div
@@ -244,7 +258,9 @@ const Praca = ({ praca, token }) => {
 
                 onContextMenu={(e) => e.preventDefault()}
             >
-                {isLoading && (
+
+
+                {isLoading ? (
                     <div className="inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
                         <div className="bg-gray-800 p-8 rounded-xl shadow-2xl max-w-2xl w-full mx-4 flex flex-col items-center">
                             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-yellow-400 mb-4"></div>
@@ -255,25 +271,43 @@ const Praca = ({ praca, token }) => {
                             </div>
                         </div>
                     </div>
-                )}
+                ) : (
 
-                <div>
-                    <Document
-                        ref={documentRef}
-                        file={`/uploads/encartes/${pdfHash}.pdf`}
-                        onLoadSuccess={onDocumentLoadSuccess}
-                        loading={<div className="hidden" />}
-                        onLoadError={(error) => console.error("Erro ao carregar PDF:", error)}
-                    >
-                        {Array.from(new Array(numPages), (_, index) => (
-                            <Page
-                                key={`page_${index + 1}`}
-                                pageNumber={index + 1}
-                                width={800}
-                            />
-                        ))}
-                    </Document>
-                </div>
+                    <div>
+
+                        {pdfexiste ?
+
+                            (<Document
+                                ref={documentRef}
+                                file={`https://comprasat.rf.gd/uploads/encartes/${pdfHash}.pdf`}
+                                onLoadSuccess={onDocumentLoadSuccess}
+                                loading={<div className="hidden" />}
+                                onLoadError={(error) => console.error("Erro ao carregar PDF:", error)}
+                            >
+                                {Array.from(new Array(numPages), (_, index) => (
+                                    <Page
+                                        key={`page_${index + 1}`}
+                                        pageNumber={index + 1}
+                                        width={800}
+                                    />
+                                ))}
+                            </Document>) : (
+
+                                <div className="w-[794px] h-[1123px] border border-dashed border-gray-400 bg-gray-50 flex items-start justify-center text-center p-4 rounded shadow">
+                                    <div>
+                                        <h2 className="text-xl font-semibold text-red-600 mb-4">PDF não encontrado</h2>
+                                        <p className="text-gray-700">
+                                            Vá até a <strong>tela de cadastro de campanhas</strong> e faça o upload do PDF desta praça na respectiva campanha.
+                                        </p>
+                                    </div>
+                                </div>
+
+
+                            )
+                        }
+                    </div>
+
+                )}
 
                 {annotations.map((annotation) => (
                     <div

@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$praca, $TokenCampanha]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $pdfId = $row['pdf_id'] ?? null;
-        $itens = $row['itens'];
+        $itens = $row['itens'] ?? null;
 
         // Buscar quantidade de anotações, se houver pdf_id
         $totalCorrecoes = 0;
