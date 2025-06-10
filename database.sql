@@ -24,6 +24,7 @@ CREATE TABLE `hashpdf` (
     `praca` VARCHAR(40) NOT NULL,
     `campanha_id` VARCHAR(100) NOT NULL,
     `pdf_id` VARCHAR(100) NOT NULL UNIQUE,
+    `objectPng` TEXT,
     `itens` INT(11) DEFAULT 0,
     `user` VARCHAR(20),
     `data_upload` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -99,10 +100,5 @@ CREATE TABLE `campanhas` (
     `dataCadastro` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
-
-
-
-
------------------------------------------------------------
 
 

@@ -17,6 +17,7 @@ const Praca = ({ praca, token, pdfExiste }) => {
     const [annotations, setAnnotations] = useState([]);
     const [pdfAtualizado, setPdfAtualizado] = useState(false);
     const [pdfexiste, setPdfExiste] = useState(true);
+    const [totalItens, setTotalItens] = useState(0);
 
     const handlePdfChanged = () => {
         setPdfAtualizado(true);
@@ -97,7 +98,7 @@ const Praca = ({ praca, token, pdfExiste }) => {
     const syncAnnotation = async (action, annotation) => {
 
         if (pdfHash == null || pdfHash == '') {
-            alert('Não há PDF a ser marcado! faça o upload e volte novamente!');
+            alert('Não é possível deixar a marcação, sem um PDF ou o total de itens!');
             // await fetchAnnotations();
             return;
         }
@@ -114,6 +115,7 @@ const Praca = ({ praca, token, pdfExiste }) => {
                 body: formData,
             });
 
+            await fetchAnnotations(pdfHash);
         } catch (error) {
             console.error('Erro ao sincronizar:', error);
         }
@@ -127,7 +129,13 @@ const Praca = ({ praca, token, pdfExiste }) => {
 
     };
 
-    const handleMouseClick = (event) => {
+    const handleMouseClick = async (event) => {
+
+        if (pdfHash == null || pdfHash == '' || totalItens == 0) {
+            alert('Não é possível deixar a marcação, sem um PDF ou o total de itens!');
+            return;
+        }
+
         event.preventDefault();
 
         const pdfContainer = event.currentTarget.getBoundingClientRect();
@@ -192,7 +200,7 @@ const Praca = ({ praca, token, pdfExiste }) => {
 
             if (newAnnotation) {
                 setAnnotations([...annotations, newAnnotation]);
-                syncAnnotation('add', newAnnotation); // Sincroniza com o banco ao adicionar
+                await syncAnnotation('add', newAnnotation); // Sincroniza com o banco ao adicionar
             }
 
 
@@ -228,7 +236,10 @@ const Praca = ({ praca, token, pdfExiste }) => {
                     pdfHash={pdfHash}
                     onPdfChanged={handlePdfChanged}
                     setpdfHash={setpdfHash}
-                    fetchAnnotations={fetchAnnotations} />
+                    fetchAnnotations={fetchAnnotations}
+                    totalItens={totalItens}
+                    setTotalItens={setTotalItens}
+                />
             </div>
 
             <div
@@ -280,6 +291,7 @@ const Praca = ({ praca, token, pdfExiste }) => {
                             (<Document
                                 ref={documentRef}
                                 file={`https://comprasat.rf.gd/uploads/encartes/${pdfHash}.pdf`}
+                                // file={`/uploads/encartes/${pdfHash}.pdf`}
                                 onLoadSuccess={onDocumentLoadSuccess}
                                 loading={<div className="hidden" />}
                                 onLoadError={(error) => console.error("Erro ao carregar PDF:", error)}

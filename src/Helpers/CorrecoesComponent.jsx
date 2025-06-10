@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 
 
-export default function CorrecoesComponent({ praca, token, annotations, onPdfChanged, setpdfHash, fetchAnnotations }) {
-    const [totalItens, setTotalItens] = useState(0);
+export default function CorrecoesComponent({ praca, token, annotations, onPdfChanged, setpdfHash, fetchAnnotations, totalItens, setTotalItens }) {
     const [correcoes, setCorrecoes] = useState(0);
     const [salvo, setSalvo] = useState(false);
     const [isPercentValid, setisPercentValid] = useState(true);
@@ -15,9 +14,9 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
     const [menuVisivel, setMenuVisivel] = useState(false);
     const [posicao, setPosicao] = useState({ x: 0, y: 0 });
     const [menuFile, setMenuFile] = useState();
-    const [isManualRender, setIsManualRender] = useState(false);
     const [selectedHash, setSelectedHash] = useState(null);
     const [progresso, setProgresso] = useState(0);
+
 
 
     useEffect(() => {
@@ -40,18 +39,20 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
                     setPdfExiste(false);
                 }
 
-                if (!isManualRender) {
+                setTotalItens(data.itens);
+                setCorrecoes(data.correcoes);
 
-                    setCorrecoes(data.correcoes);
-                    setTotalItens(data.itens);
-                }
 
             } catch (error) {
                 console.error('Erro:', error);
             }
         };
         fetchPdf();
-    }, [annotations, praca, isManualRender]);
+    }, [annotations, praca]);
+
+    useEffect(() => {
+        getFileCorrections();
+    }, [file, annotations, praca, salvo])
 
     useEffect(() => {
         // Só calcula se os dois estados já foram carregados com valores válidos
@@ -60,7 +61,11 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
             typeof totalItens === 'number' &&
             totalItens > 0
         ) {
-            const progressoCalculado = Math.round((correcoes / totalItens) * 100);
+            // Calcula o progresso, garantindo que não passe de 100%
+            const progressoCalculado = Math.min(
+                Math.round((correcoes / totalItens) * 100),
+                100 // Limite máximo de 100%
+            );
 
             if (Number.isFinite(progressoCalculado)) {
                 setisPercentValid(true);
@@ -83,7 +88,7 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
 
     const handleUpload = async () => {
         if (!file) return;
-        setIsUploading(true);
+        setIsUploading(false);
 
         const formData = new FormData();
         formData.append('files[]', file);
@@ -102,7 +107,7 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
 
                 alert("arquivo enviado com sucesso!");
                 setUploadStatus('success');
-                setIsUploading(false);
+                setIsUploading(true);
                 onPdfChanged();
                 setIsOpenModalUpload(false);
                 getFileCorrections();
@@ -170,10 +175,6 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
         }
     };
 
-    useEffect(() => {
-        getFileCorrections();
-    }, [file, annotations, praca, salvo])
-
 
     const contextDownload = (event, file) => {
         event.preventDefault();
@@ -205,7 +206,6 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
 
 
     const renderPdf = async (pdf, correcoes, itens) => {
-        setIsManualRender(true);
         setCorrecoes(correcoes);
         await setpdfHash(pdf);
         await fetchAnnotations(pdf);
@@ -328,10 +328,14 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
             {/* Campo para definir total de itens */}
             {pdfExiste ? (
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Total de Correções Esperadas
-                        <b className="text-green-500"> .: {totalItens} {salvo && <b className="text-green-500"> Salvo!</b>}</b></label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Correções Esperadas
 
+                        <b className={totalItens === 0 ? "text-red-500 text-sm" : "text-green-500 text-sm"}>
+                            {totalItens === 0 ? " Preencha a quantidade de itens!" : `.: ${correcoes}/${totalItens}`}
+                            {salvo && totalItens !== 0 && <b className="text-green-500"> Salvo!</b>}
+                        </b>
 
+                    </label>
 
                     <input
                         type="text"
@@ -399,15 +403,14 @@ export default function CorrecoesComponent({ praca, token, annotations, onPdfCha
 
             {/* Botão para subir correção */}
 
-            {pdfExiste ? (
 
-                <button
-                    onClick={() => handleModalUpload(true)}
-                    className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
-                >
-                    Subir Próxima Correção
-                </button>
-            ) : ('')}
+            <button
+                onClick={() => handleModalUpload(true)}
+                className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+            >
+                Subir um Arquivo
+            </button>
+
         </div>
     );
 }

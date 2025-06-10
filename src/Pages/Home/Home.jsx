@@ -262,7 +262,7 @@ const Home = () => {
                         d="M4 6h16M4 10h16M4 14h16M4 18h16"
                       />
                     </svg>
-                    <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                    <h3 className="text-xl font-semibold mb-2">
                       Nenhuma filial selecionada
                     </h3>
                     <p className="text-gray-500 max-w-md">
@@ -349,6 +349,14 @@ const Home = () => {
                         </div>
                       </div>
 
+                      <span
+                        className="cursor-pointer text-red-600 text-4xl"
+                        title="Remover"
+                        onClick={() => removerCampanha(campanha)}
+                      >
+                        <AiOutlineDelete />
+                      </span>
+
                       <div
                         className={`w-20 text-center border rounded py-1 font-semibold
                             ${campanha.progresso < 50 ? 'bg-red-100 text-red-700' :
@@ -359,21 +367,14 @@ const Home = () => {
                       </div>
 
                       {/* Nuvem de Upload */}
-                      <span
+                      {/* <span
                         className="cursor-pointer text-4xl"
                         title="Upload Arquivos Nesta Campanha"
                         onClick={() => UploadArquivosCampanha(campanha)}
                       >
                         <AiOutlineCloudUpload />
-                      </span>
+                      </span> */}
 
-                      <span
-                        className="cursor-pointer text-red-600 text-4xl"
-                        title="Remover"
-                        onClick={() => removerCampanha(campanha)}
-                      >
-                        <AiOutlineDelete />
-                      </span>
 
                       <span
                         className="cursor-pointer text-green-600 text-4xl"
